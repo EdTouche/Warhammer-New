@@ -90,6 +90,7 @@
   <script>
     const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRyoHPRKS7o2VRo-6Oq9FEfZtbfp8up-c0Hg5m8arL4WlswLCBGPt2t7fwSWI5zLNmjv0LAcaTbKXqk/pub?gid=2115745400&single=true&output=csv";
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx3seCmeQrcFh7WiSBYMMsEm31B0wWzmUmHqShPqjbPbvG3yjvMvO_Rs5Fj5TZpB_TrtQ/exec";
+const FEEDBACK_DELAY = 3000; "https://script.google.com/macros/s/AKfycbx3seCmeQrcFh7WiSBYMMsEm31B0wWzmUmHqShPqjbPbvG3yjvMvO_Rs5Fj5TZpB_TrtQ/exec";
     let books = [];
 
     function toggleRead(i) {
@@ -97,6 +98,20 @@
       book.read = book.read === "TRUE" ? "FALSE" : "TRUE";
       renderBooks();
       fetch(SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: book.title, read: book.read })
+      })
+      .then(res => res.text())
+      .then(txt => {
+        document.getElementById('save-status').textContent = '✔ ' + txt;
+        setTimeout(() => { document.getElementById('save-status').textContent = ''; }, FEEDBACK_DELAY);
+      })
+      .catch(() => {
+        document.getElementById('save-status').textContent = '⚠ Failed to update read status.';
+        setTimeout(() => { document.getElementById('save-status').textContent = ''; }, FEEDBACK_DELAY);
+      });
+    
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -112,7 +127,15 @@
       const faction = document.getElementById('faction').value;
       const era = document.getElementById('era').value;
       const container = document.getElementById('book-list');
+      
       container.innerHTML = '';
+      const feedback = document.createElement('div');
+      feedback.id = 'save-status';
+      feedback.style.color = '#44ff44';
+      feedback.style.textAlign = 'center';
+      feedback.style.marginBottom = '20px';
+      container.parentElement.insertBefore(feedback, container);
+    
 
       books.forEach((book, i) => {
         if ((faction && book.faction !== faction) ||
