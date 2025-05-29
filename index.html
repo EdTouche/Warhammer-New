@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Warhammer 40K Book Tracker</title>
+  <style>
+    body {
+      background-color: #111;
+      color: #fff;
+      font-family: sans-serif;
+      padding: 20px;
+    }
+    .card {
+      background-color: #1e1e1e;
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      border: 1px solid #555;
+    }
+    .filter {
+      margin-bottom: 20px;
+    }
+    button {
+      background-color: darkred;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 5px;
+      margin-top: 10px;
+    }
+    select {
+      margin-right: 10px;
+      padding: 5px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Codex Librarium: Space Marine Reading Tracker</h1>
+  <div class="filter">
+    <label for="faction">Faction:</label>
+    <select id="faction" onchange="renderBooks()">
+      <option value="">All</option>
+    </select>
+    <label for="era">Era:</label>
+    <select id="era" onchange="renderBooks()">
+      <option value="">All</option>
+    </select>
+  </div>
+  <div id="book-list">Loading books...</div>
+
+  <script>
+    const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRyoHPRKS7o2VRo-6Oq9FEfZtbfp8up-c0Hg5m8arL4WlswLCBGPt2t7fwSWI5zLNmjv0LAcaTbKXqk/pub?gid=2115745400&single=true&output=csv";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx3seCmeQrcFh7WiSBYMMsEm31B0wWzmUmHqShPqjbPbvG3yjvMvO_Rs5Fj5TZpB_TrtQ/exec";
+    let books = [];
+
+    function toggleRead(i) {
+      const book = books[i];
+      book.read = book.read === "TRUE" ? "FALSE" : "TRUE";
+      renderBooks();
+
+      fetch(SCRIPT_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          title: book.title,
+          read: book.read
+        })
+      });
+    }
+
+    function renderBooks() {
+      const faction = document.getElementById('faction').value;
+      const era = document.getElementById('era').value;
+      const container = document.getElementById('book-list');
+      container.innerHTML = '';
+
+      books.forEach((book, i) => {
+        if ((faction && book.faction !== faction) || (era && book.era !== era)) return;
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <h2>\${book.title}</h2>
+          <p><strong>Author:</strong> \${book.author}</p>
+          <p><strong>Series:</strong> \${book.series}</p>
+          <p><strong>Era:</strong> \${book.era} | <strong>Faction:</strong> \${book.faction}</p>
+          <button onclick="toggleRead(\${i})">\${book.read === "TRUE" ? "Mark as Unread" : "Mark as Read"}</button>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    fetch(SHEET_URL)
+      .then(response => response.text())
+      .then(text => {
+        const lines = text.trim().split('\n');
+        const rows = lines.slice(1);
+        books = rows.map(row => {
+          const cols = row.split(',');
+          return {
+            title: cols[0],
+            author: cols[1],
+            series: cols[2],
+            era: cols[3],
+            faction: cols[4],
+            read: cols[5] || "FALSE"
+          };
+        });
+
+        const factions = [...new Set(books.map(b => b.faction))].sort();
+        const eras = [...new Set(books.map(b => b.era))].sort();
+
+        const factionSelect = document.getElementById('faction');
+        factions.forEach(f => {
+          const option = document.createElement('option');
+          option.value = f;
+          option.textContent = f;
+          factionSelect.appendChild(option);
+        });
+
+        const eraSelect = document.getElementById('era');
+        eras.forEach(e => {
+          const option = document.createElement('option');
+          option.value = e;
+          option.textContent = e;
+          eraSelect.appendChild(option);
+        });
+
+        renderBooks();
+      });
+  </script>
+</body>
+</html>
