@@ -2,163 +2,105 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Warhammer 40K Codex Librarium</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Warhammer 40K Book Tracker</title>
   <style>
     body {
       background-color: #0b0b0b;
-      color: #e0e0e0;
-      font-family: 'Verdana', sans-serif;
+      color: #eee;
+      font-family: sans-serif;
       padding: 20px;
     }
-    .card {
-      background-color: #1a1a1a;
-      padding: 20px;
-      border: 1px solid #444;
-      border-radius: 10px;
-      margin-bottom: 15px;
+    h1 {
+      color: #ffc107;
     }
-    .filters {
-      margin-bottom: 20px;
-    }
-    select {
+    .filters select {
+      margin: 5px;
       padding: 5px;
-      margin-right: 10px;
-      background: #111;
-      color: white;
+    }
+    .book {
+      background: #1e1e1e;
+      padding: 15px;
+      margin: 10px 0;
+      border-left: 5px solid #ffc107;
     }
     button {
-      background-color: #222;
-      color: white;
-      border: 1px solid #555;
-      padding: 5px 10px;
-      margin-top: 10px;
-      cursor: pointer;
-    }
-    #save-status {
-      margin: 10px 0;
-      color: lime;
+      margin-top: 5px;
     }
   </style>
 </head>
 <body>
-  <h1>⚔️ Warhammer 40K Codex Librarium</h1>
-
+  <h1>Codex Librarium: Warhammer 40K</h1>
   <div class="filters">
-    <label for="faction">Faction:</label>
-    <select id="faction" onchange="renderBooks()">
-      <option value="">All</option>
-    </select>
-
-    <label for="era">Era:</label>
-    <select id="era" onchange="renderBooks()">
-      <option value="">All</option>
-    </select>
-
-    <label for="read">Read:</label>
-    <select id="read" onchange="renderBooks()">
-      <option value="">All</option>
-      <option value="true">Read</option>
-      <option value="false">Unread</option>
-    </select>
+    <label>Era: <select id="eraFilter"><option value="">All</option></select></label>
+    <label>Faction: <select id="factionFilter"><option value="">All</option></select></label>
+    <label>Series: <select id="seriesFilter"><option value="">All</option></select></label>
+    <label>Status: <select id="readFilter"><option value="">All</option><option value="1">Read</option><option value="0">Unread</option></select></label>
   </div>
-
-  <div id="save-status"></div>
-  <div id="book-list"></div>
+  <div id="books"></div>
 
   <script>
-    const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRDw80CuG5loPqg1iw9vFRZmt4A2T63EqoYTGpocCMxXAC8W39AbZYbCHZFoKUekcynZLy8TOxCEaEZ/pub?gid=2115745400&single=true&output=csv";
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx3seCmeQrcFh7WiSBYMMsEm31B0wWzmUmHqShPqjbPbvG3yjvMvO_Rs5Fj5TZpB_TrtQ/exec";
+    const scriptUrl = "https://script.google.com/macros/library/d/15a7gj-_onpLwlNzUW6q3nys9GIflI43jE4MHIehSLiDoLueNdTMpKOb1/3";
+    let books = [{'Series': 'Horus Heresy', 'BookNumber': 1.0, 'Title': 'Horus Rising', 'Author': 'Dan Abnett', 'Era': 'Great Crusade', 'Faction': 'Luna Wolves', 'ReadStatus': 0}, {'Series': 'Horus Heresy', 'BookNumber': 2.0, 'Title': 'False Gods', 'Author': 'Graham McNeill', 'Era': 'Great Crusade', 'Faction': 'Luna Wolves', 'ReadStatus': 0}, {'Series': 'Horus Heresy', 'BookNumber': 3.0, 'Title': 'Galaxy in Flames', 'Author': 'Ben Counter', 'Era': 'Horus Heresy', 'Faction': 'Luna Wolves', 'ReadStatus': 0}, {'Series': 'Horus Heresy', 'BookNumber': 4.0, 'Title': 'The Flight of the Eisenstein', 'Author': 'James Swallow', 'Era': 'Horus Heresy', 'Faction': 'Death Guard', 'ReadStatus': 0}, {'Series': 'Horus Heresy', 'BookNumber': 5.0, 'Title': 'Fulgrim', 'Author': 'Graham McNeill', 'Era': 'Horus Heresy', 'Faction': "Emperor's Children", 'ReadStatus': 0}, {'Series': 'Horus Heresy', 'BookNumber': 6.0, 'Title': 'Descent of Angels', 'Author': 'Mitchell Scanlon', 'Era': 'Pre-Heresy', 'Faction': 'Dark Angels', 'ReadStatus': 0}, {'Series': 'Horus Heresy', 'BookNumber': 7.0, 'Title': 'Legion', 'Author': 'Dan Abnett', 'Era': 'Pre-Heresy', 'Faction': 'Alpha Legion', 'ReadStatus': 0}, {'Series': 'Horus Heresy', 'BookNumber': 8.0, 'Title': 'Battle for the Abyss', 'Author': 'Ben Counter', 'Era': 'Horus Heresy', 'Faction': 'Ultramarines', 'ReadStatus': 0}, {'Series': 'Horus Heresy', 'BookNumber': 9.0, 'Title': 'Mechanicum', 'Author': 'Graham McNeill', 'Era': 'Horus Heresy', 'Faction': 'Adeptus Mechanicus', 'ReadStatus': 0}, {'Series': 'Horus Heresy', 'BookNumber': 10.0, 'Title': 'Tales of Heresy', 'Author': 'Various', 'Era': 'Pre-Heresy', 'Faction': 'Various', 'ReadStatus': 0}, {'Series': 'Horus Heresy', 'BookNumber': 11.0, 'Title': 'Fallen Angels', 'Author': 'Mike Lee', 'Era': 'Horus Heresy', 'Faction': 'Dark Angels', 'ReadStatus': 0}, {'Series': 'Horus Heresy', 'BookNumber': 12.0, 'Title': 'A Thousand Sons', 'Author': 'Graham McNeill', 'Era': 'Horus Heresy', 'Faction': 'Thousand Sons', 'ReadStatus': 0}, {'Series': 'Horus Heresy', 'BookNumber': 13.0, 'Title': 'Nemesis', 'Author': 'James Swallow', 'Era': 'Horus Heresy', 'Faction': 'Assassins', 'ReadStatus': 0}, {'Series': 'Horus Heresy', 'BookNumber': 14.0, 'Title': 'The First Heretic', 'Author': 'Aaron Dembski-Bowden', 'Era': 'Pre-Heresy', 'Faction': 'Word Bearers', 'ReadStatus': 0}, {'Series': 'Horus Heresy', 'BookNumber': 15.0, 'Title': 'Prospero Burns', 'Author': 'Dan Abnett', 'Era': 'Horus Heresy', 'Faction': 'Space Wolves', 'ReadStatus': 0}, {'Series': 'Horus Heresy', 'BookNumber': 16.0, 'Title': 'Age of Darkness', 'Author': 'Various', 'Era': 'Horus Heresy', 'Faction': 'Various', 'ReadStatus': 0}, {'Series': 'Horus Heresy', 'BookNumber': 17.0, 'Title': 'The Outcast Dead', 'Author': 'Graham McNeill', 'Era': 'Horus Heresy', 'Faction': 'Various', 'ReadStatus': 0}, {'Series': 'Horus Heresy', 'BookNumber': 18.0, 'Title': 'Deliverance Lost', 'Author': 'Gav Thorpe', 'Era': 'Horus Heresy', 'Faction': 'Raven Guard', 'ReadStatus': 0}, {'Series': 'Horus Heresy', 'BookNumber': 19.0, 'Title': 'Know No Fear', 'Author': 'Dan Abnett', 'Era': 'Horus Heresy', 'Faction': 'Ultramarines', 'ReadStatus': 0}, {'Series': 'Horus Heresy', 'BookNumber': 20.0, 'Title': 'The Primarchs', 'Author': 'Various', 'Era': 'Horus Heresy', 'Faction': 'Various', 'ReadStatus': 0}, {'Series': 'Horus Heresy', 'BookNumber': 21.0, 'Title': 'Fear to Tread', 'Author': 'James Swallow', 'Era': 'Horus Heresy', 'Faction': 'Blood Angels', 'ReadStatus': 0}, {'Series': 'Horus Heresy', 'BookNumber': 22.0, 'Title': 'Shadows of Treachery', 'Author': 'Various', 'Era': 'Horus Heresy', 'Faction': 'Various', 'ReadStatus': 0}, {'Series': 'Horus Heresy', 'BookNumber': 23.0, 'Title': 'Angel Exterminatus', 'Author': 'Graham McNeill', 'Era': 'Horus Heresy', 'Faction': 'Iron Warriors', 'ReadStatus': 0}, {'Series': 'Horus Heresy', 'BookNumber': 24.0, 'Title': 'Betrayer', 'Author': 'Aaron Dembski-Bowden', 'Era': 'Horus Heresy', 'Faction': 'World Eaters', 'ReadStatus': 0}, {'Series': 'Horus Heresy', 'BookNumber': 25.0, 'Title': 'Mark of Calth', 'Author': 'Various', 'Era': 'Horus Heresy', 'Faction': 'Ultramarines', 'ReadStatus': 0}, {'Series': 'Horus Heresy', 'BookNumber': 26.0, 'Title': 'Vulkan Lives', 'Author': 'Nick Kyme', 'Era': 'Horus Heresy', 'Faction': 'Salamanders', 'ReadStatus': 0}, {'Series': 'Horus Heresy', 'BookNumber': 27.0, 'Title': 'The Unremembered Empire', 'Author': 'Dan Abnett', 'Era': 'Horus Heresy', 'Faction': 'Ultramarines', 'ReadStatus': 0}, {'Series': 'Horus Heresy', 'BookNumber': 28.0, 'Title': 'Scars', 'Author': 'Chris Wraight', 'Era': 'Horus Heresy', 'Faction': 'White Scars', 'ReadStatus': 0}, {'Series': 'Horus Heresy', 'BookNumber': 29.0, 'Title': 'Vengeful Spirit', 'Author': 'Graham McNeill', 'Era': 'Horus Heresy', 'Faction': 'Sons of Horus', 'ReadStatus': 0}, {'Series': 'Horus Heresy', 'BookNumber': 30.0, 'Title': 'The Damnation of Pythos', 'Author': 'David Annandale', 'Era': 'Horus Heresy', 'Faction': 'Iron Hands', 'ReadStatus': 0}, {'Series': 'Horus Heresy', 'BookNumber': 31.0, 'Title': 'Legacies of Betrayal', 'Author': 'Various', 'Era': 'Horus Heresy', 'Faction': 'Various', 'ReadStatus': 0}, {'Series': 'Horus Heresy', 'BookNumber': 32.0, 'Title': 'Deathfire', 'Author': 'Nick Kyme', 'Era': 'Horus Heresy', 'Faction': 'Salamanders', 'ReadStatus': 0}, {'Series': 'Horus Heresy', 'BookNumber': 33.0, 'Title': 'War Without End', 'Author': 'Various', 'Era': 'Horus Heresy', 'Faction': 'Various', 'ReadStatus': 0}, {'Series': 'Horus Heresy', 'BookNumber': 34.0, 'Title': 'Pharos', 'Author': 'Guy Haley', 'Era': 'Horus Heresy', 'Faction': 'Ultramarines', 'ReadStatus': 0}, {'Series': 'Horus Heresy', 'BookNumber': 35.0, 'Title': 'Eye of Terra', 'Author': 'Various', 'Era': 'Horus Heresy', 'Faction': 'Various', 'ReadStatus': 0}, {'Series': 'Horus Heresy', 'BookNumber': 36.0, 'Title': 'The Path of Heaven', 'Author': 'Chris Wraight', 'Era': 'Horus Heresy', 'Faction': 'White Scars', 'ReadStatus': 0}, {'Series': 'Horus Heresy', 'BookNumber': 37.0, 'Title': 'The Silent War', 'Author': 'Various', 'Era': 'Horus Heresy', 'Faction': 'Various', 'ReadStatus': 0}, {'Series': 'Horus Heresy', 'BookNumber': 38.0, 'Title': 'Angels of Caliban', 'Author': 'Gav Thorpe', 'Era': 'Horus Heresy', 'Faction': 'Dark Angels', 'ReadStatus': 0}, {'Series': 'Horus Heresy', 'BookNumber': 39.0, 'Title': 'Praetorian of Dorn', 'Author': 'John French', 'Era': 'Horus Heresy', 'Faction': 'Imperial Fists', 'ReadStatus': 0}, {'Series': 'Horus Heresy', 'BookNumber': 40.0, 'Title': 'Corax', 'Author': 'Gav Thorpe', 'Era': 'Horus Heresy', 'Faction': 'Raven Guard', 'ReadStatus': 0}, {'Series': 'Horus Heresy', 'BookNumber': 41.0, 'Title': 'The Master of Mankind', 'Author': 'Aaron Dembski-Bowden', 'Era': 'Horus Heresy', 'Faction': 'Imperium', 'ReadStatus': 0}, {'Series': 'Horus Heresy', 'BookNumber': 42.0, 'Title': 'Garro', 'Author': 'James Swallow', 'Era': 'Horus Heresy', 'Faction': 'Knights Errant', 'ReadStatus': 0}, {'Series': 'Horus Heresy', 'BookNumber': 43.0, 'Title': 'Shattered Legions', 'Author': 'Various', 'Era': 'Horus Heresy', 'Faction': 'Iron Hands', 'ReadStatus': 0}, {'Series': 'Horus Heresy', 'BookNumber': 44.0, 'Title': 'The Crimson King', 'Author': 'Graham McNeill', 'Era': 'Horus Heresy', 'Faction': 'Thousand Sons', 'ReadStatus': 0}, {'Series': 'Horus Heresy', 'BookNumber': 45.0, 'Title': 'Tallarn', 'Author': 'John French', 'Era': 'Horus Heresy', 'Faction': 'Iron Warriors', 'ReadStatus': 0}, {'Series': 'Horus Heresy', 'BookNumber': 46.0, 'Title': 'Ruinstorm', 'Author': 'David Annandale', 'Era': 'Horus Heresy', 'Faction': 'Ultramarines', 'ReadStatus': 0}, {'Series': 'Horus Heresy', 'BookNumber': 47.0, 'Title': 'Old Earth', 'Author': 'Nick Kyme', 'Era': 'Horus Heresy', 'Faction': 'Salamanders', 'ReadStatus': 0}, {'Series': 'Horus Heresy', 'BookNumber': 48.0, 'Title': 'The Burden of Loyalty', 'Author': 'Various', 'Era': 'Horus Heresy', 'Faction': 'Various', 'ReadStatus': 0}, {'Series': 'Horus Heresy', 'BookNumber': 49.0, 'Title': 'Wolfsbane', 'Author': 'Guy Haley', 'Era': 'Horus Heresy', 'Faction': 'Space Wolves', 'ReadStatus': 0}, {'Series': 'Horus Heresy', 'BookNumber': 50.0, 'Title': 'Born of Flame', 'Author': 'Nick Kyme', 'Era': 'Horus Heresy', 'Faction': 'Salamanders', 'ReadStatus': 0}, {'Series': 'Horus Heresy', 'BookNumber': 51.0, 'Title': 'Slaves to Darkness', 'Author': 'John French', 'Era': 'Horus Heresy', 'Faction': 'Sons of Horus', 'ReadStatus': 0}, {'Series': 'Horus Heresy', 'BookNumber': 52.0, 'Title': 'Heralds of the Siege', 'Author': 'Various', 'Era': 'Horus Heresy', 'Faction': 'Various', 'ReadStatus': 0}, {'Series': 'Horus Heresy', 'BookNumber': 53.0, 'Title': 'Titandeath', 'Author': 'Guy Haley', 'Era': 'Horus Heresy', 'Faction': 'Legio Titanicus', 'ReadStatus': 0}, {'Series': 'Horus Heresy', 'BookNumber': 54.0, 'Title': 'The Buried Dagger', 'Author': 'James Swallow', 'Era': 'Horus Heresy', 'Faction': 'Death Guard', 'ReadStatus': 0}, {'Series': 'Siege of Terra', 'BookNumber': 1.0, 'Title': 'The Solar War', 'Author': 'John French', 'Era': 'Siege of Terra', 'Faction': 'Imperial Fists', 'ReadStatus': 0}, {'Series': 'Siege of Terra', 'BookNumber': 2.0, 'Title': 'The Lost and the Damned', 'Author': 'Guy Haley', 'Era': 'Siege of Terra', 'Faction': 'Imperium', 'ReadStatus': 0}, {'Series': 'Siege of Terra', 'BookNumber': 3.0, 'Title': 'The First Wall', 'Author': 'Gav Thorpe', 'Era': 'Siege of Terra', 'Faction': 'Imperial Fists', 'ReadStatus': 0}, {'Series': 'Siege of Terra', 'BookNumber': 4.0, 'Title': 'Saturnine', 'Author': 'Dan Abnett', 'Era': 'Siege of Terra', 'Faction': 'Imperium', 'ReadStatus': 0}, {'Series': 'Siege of Terra', 'BookNumber': 5.0, 'Title': 'Mortis', 'Author': 'John French', 'Era': 'Siege of Terra', 'Faction': 'Legio Mortis', 'ReadStatus': 0}, {'Series': 'Siege of Terra', 'BookNumber': 6.0, 'Title': 'Warhawk', 'Author': 'Chris Wraight', 'Era': 'Siege of Terra', 'Faction': 'White Scars', 'ReadStatus': 0}, {'Series': 'Siege of Terra', 'BookNumber': 7.0, 'Title': 'Echoes of Eternity', 'Author': 'Aaron Dembski-Bowden', 'Era': 'Siege of Terra', 'Faction': 'Imperium', 'ReadStatus': 0}, {'Series': 'Siege of Terra', 'BookNumber': 8.0, 'Title': 'The End and the Death: Volume I', 'Author': 'Dan Abnett', 'Era': 'Siege of Terra', 'Faction': 'Imperium', 'ReadStatus': 0}, {'Series': 'Siege of Terra', 'BookNumber': 9.0, 'Title': 'The End and the Death: Volume II', 'Author': 'Dan Abnett', 'Era': 'Siege of Terra', 'Faction': 'Imperium', 'ReadStatus': 0}, {'Series': 'Siege of Terra', 'BookNumber': 10.0, 'Title': 'The End and the Death: Volume III', 'Author': 'Dan Abnett', 'Era': 'Siege of Terra', 'Faction': 'Imperium', 'ReadStatus': 0}, {'Series': 'Primarchs', 'BookNumber': nan, 'Title': 'Roboute Guilliman: Lord of Ultramar', 'Author': 'David Annandale', 'Era': 'Great Crusade', 'Faction': 'Ultramarines', 'ReadStatus': 0}, {'Series': 'Primarchs', 'BookNumber': nan, 'Title': 'Leman Russ: The Great Wolf', 'Author': 'Chris Wraight', 'Era': 'Great Crusade', 'Faction': 'Space Wolves', 'ReadStatus': 0}, {'Series': 'Primarchs', 'BookNumber': nan, 'Title': 'Magnus the Red: Master of Prospero', 'Author': 'Graham McNeill', 'Era': 'Pre-Heresy', 'Faction': 'Thousand Sons', 'ReadStatus': 0}, {'Series': 'Primarchs', 'BookNumber': nan, 'Title': 'Perturabo: The Hammer of Olympia', 'Author': 'Guy Haley', 'Era': 'Pre-Heresy', 'Faction': 'Iron Warriors', 'ReadStatus': 0}, {'Series': 'Primarchs', 'BookNumber': nan, 'Title': 'Lorgar: Bearer of the Word', 'Author': 'Gav Thorpe', 'Era': 'Pre-Heresy', 'Faction': 'Word Bearers', 'ReadStatus': 0}, {'Series': 'Primarchs', 'BookNumber': nan, 'Title': 'Fulgrim: The Palatine Phoenix', 'Author': 'Josh Reynolds', 'Era': 'Pre-Heresy', 'Faction': "Emperor's Children", 'ReadStatus': 0}, {'Series': 'Primarchs', 'BookNumber': nan, 'Title': 'Ferrus Manus: The Gorgon of Medusa', 'Author': 'David Guymer', 'Era': 'Great Crusade', 'Faction': 'Iron Hands', 'ReadStatus': 0}, {'Series': 'Primarchs', 'BookNumber': nan, 'Title': 'Jaghatai Khan: Warhawk of Chogoris', 'Author': 'Chris Wraight', 'Era': 'Great Crusade', 'Faction': 'White Scars', 'ReadStatus': 0}, {'Series': 'Primarchs', 'BookNumber': nan, 'Title': 'Vulkan: Lord of Drakes', 'Author': 'David Annandale', 'Era': 'Great Crusade', 'Faction': 'Salamanders', 'ReadStatus': 0}, {'Series': 'Primarchs', 'BookNumber': nan, 'Title': 'Corax: Lord of Shadows', 'Author': 'Guy Haley', 'Era': 'Great Crusade', 'Faction': 'Raven Guard', 'ReadStatus': 0}, {'Series': 'Primarchs', 'BookNumber': nan, 'Title': 'Angron: Slave of Nuceria', 'Author': 'Ian St. Martin', 'Era': 'Pre-Heresy', 'Faction': 'World Eaters', 'ReadStatus': 0}, {'Series': 'Primarchs', 'BookNumber': nan, 'Title': 'Konrad Curze: The Night Haunter', 'Author': 'Guy Haley', 'Era': 'Pre-Heresy', 'Faction': 'Night Lords', 'ReadStatus': 0}, {'Series': 'Primarchs', 'BookNumber': nan, 'Title': "Lion El'Jonson: Lord of the First", 'Author': 'David Guymer', 'Era': 'Pre-Heresy', 'Faction': 'Dark Angels', 'ReadStatus': 0}, {'Series': 'Primarchs', 'BookNumber': nan, 'Title': 'Alpharius: Head of the Hydra', 'Author': 'Mike Brooks', 'Era': 'Pre-Heresy', 'Faction': 'Alpha Legion', 'ReadStatus': 0}, {'Series': 'Primarchs', 'BookNumber': nan, 'Title': 'Mortarion: The Pale King', 'Author': 'David Annandale', 'Era': 'Pre-Heresy', 'Faction': 'Death Guard', 'ReadStatus': 0}, {'Series': 'Primarchs', 'BookNumber': nan, 'Title': "Rogal Dorn: The Emperor's Crusader", 'Author': 'Gav Thorpe', 'Era': 'Great Crusade', 'Faction': 'Imperial Fists', 'ReadStatus': 0}, {'Series': 'Primarchs', 'BookNumber': nan, 'Title': 'Sanguinius: The Great Angel', 'Author': 'Chris Wraight', 'Era': 'Great Crusade', 'Faction': 'Blood Angels', 'ReadStatus': 0}];
 
-    let books = [];
+    const filters = {
+      era: document.getElementById("eraFilter"),
+      faction: document.getElementById("factionFilter"),
+      series: document.getElementById("seriesFilter"),
+      read: document.getElementById("readFilter")
+    };
 
-    async function loadBooks() {
-      const res = await fetch(SHEET_URL + "&t=" + new Date().getTime());
-      const text = await res.text();
-      const lines = text.split("\n").slice(1);
-      books = lines.map(row => {
-        const [series, bookNumber, title, author, era, faction, readStatus] = row.split(",");
-        return {
-          series, bookNumber, title, author, era, faction,
-          read: readStatus?.trim() === "1"
-        };
+    const updateFilters = () => {
+      ['Era', 'Faction', 'Series'].forEach(key => {
+        const unique = [...new Set(books.map(b => b[key]))].sort();
+        const select = filters[key.toLowerCase()];
+        unique.forEach(val => {
+          const opt = document.createElement("option");
+          opt.value = val;
+          opt.textContent = val;
+          select.appendChild(opt);
+        });
       });
-      populateFilters();
-      renderBooks();
-    }
+    };
 
-    function populateFilters() {
-      const factionSet = new Set();
-      const eraSet = new Set();
-      books.forEach(b => {
-        if (b.faction) factionSet.add(b.faction.trim());
-        if (b.era) eraSet.add(b.era.trim());
-      });
-      const factionSelect = document.getElementById("faction");
-      const eraSelect = document.getElementById("era");
-
-      [...factionSet].sort().forEach(f => {
-        factionSelect.innerHTML += `<option value="${f}">${f}</option>`;
-      });
-      [...eraSet].sort().forEach(e => {
-        eraSelect.innerHTML += `<option value="${e}">${e}</option>`;
-      });
-    }
-
-    function renderBooks() {
-      const factionFilter = document.getElementById("faction").value;
-      const eraFilter = document.getElementById("era").value;
-      const readFilter = document.getElementById("read").value;
-
-      const container = document.getElementById("book-list");
+    const render = () => {
+      const container = document.getElementById("books");
       container.innerHTML = "";
 
       books.forEach(book => {
-        if ((factionFilter && book.faction !== factionFilter) ||
-            (eraFilter && book.era !== eraFilter) ||
-            (readFilter && String(book.read) !== readFilter)) {
-          return;
-        }
+        if (filters.era.value && book.Era !== filters.era.value) return;
+        if (filters.faction.value && book.Faction !== filters.faction.value) return;
+        if (filters.series.value && book.Series !== filters.series.value) return;
+        if (filters.read.value !== "" && book.ReadStatus.toString() !== filters.read.value) return;
 
-        const card = document.createElement("div");
-        card.className = "card";
-        card.innerHTML = `
-          <h2>${book.title}</h2>
-          <p><strong>Author:</strong> ${book.author}</p>
-          <p><strong>Era:</strong> ${book.era} | <strong>Faction:</strong> ${book.faction}</p>
-          <button onclick="toggleRead('${book.title}')">${book.read ? "Mark as Unread" : "Mark as Read"}</button>
+        const div = document.createElement("div");
+        div.className = "book";
+        div.innerHTML = `
+          <h3>${book.Title}</h3>
+          <p><strong>Author:</strong> ${book.Author}</p>
+          <p><strong>Era:</strong> ${book.Era} | <strong>Faction:</strong> ${book.Faction} | <strong>Series:</strong> ${book.Series}</p>
+          <button onclick="toggleRead('${book.Title}', ${book.ReadStatus})">${book.ReadStatus ? 'Mark as Unread' : 'Mark as Read'}</button>
         `;
-        container.appendChild(card);
+        container.appendChild(div);
       });
-    }
+    };
 
-    function toggleRead(title) {
-      const book = books.find(b => b.title === title);
-      if (!book) return;
-      book.read = !book.read;
-
-      document.getElementById("save-status").textContent = "Saving...";
-
-      fetch(SCRIPT_URL, {
+    const toggleRead = (title, currentStatus) => {
+      fetch(scriptUrl, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: book.title, read: book.read ? "TRUE" : "FALSE" })
-      })
-        .then(res => res.text())
-        .then(txt => {
-          document.getElementById("save-status").textContent = "✔ " + txt;
-          renderBooks();
-          setTimeout(() => {
-            document.getElementById("save-status").textContent = "";
-          }, 3000);
-        })
-        .catch(() => {
-          document.getElementById("save-status").textContent = "⚠ Failed to save read status.";
-        });
-    }
+        body: JSON.stringify({ title: title, read: currentStatus ? "FALSE" : "TRUE" }),
+        headers: { "Content-Type": "application/json" }
+      }).then(() => {
+        const book = books.find(b => b.Title === title);
+        if (book) book.ReadStatus = currentStatus ? 0 : 1;
+        render();
+      }).catch(err => alert("Failed to update read status."));
+    };
 
-    loadBooks();
+    Object.values(filters).forEach(f => f.addEventListener("change", render));
+    updateFilters();
+    render();
   </script>
 </body>
 </html>
