@@ -3,52 +3,90 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Warhammer 40K Book Tracker</title>
+  <title>Codex Librarium</title>
+  <link href="https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&display=swap" rel="stylesheet">
   <style>
     body {
-      background-color: #111;
-      color: #fff;
-      font-family: sans-serif;
+      background-color: #0c0c0c;
+      color: #f0e6d2;
+      font-family: 'UnifrakturCook', serif;
       padding: 20px;
+      background-image: url('https://www.transparenttextures.com/patterns/asfalt-dark.png');
+      background-size: cover;
     }
-    .card {
-      background-color: #1e1e1e;
-      padding: 20px;
-      border-radius: 10px;
-      margin-bottom: 20px;
-      border: 1px solid #555;
+    h1 {
+      font-size: 2.5em;
+      text-align: center;
+      margin-bottom: 30px;
+      color: #ffd700;
+      text-shadow: 0 0 10px #ffcc00;
     }
     .filter {
-      margin-bottom: 20px;
-    }
-    button {
-      background-color: darkred;
-      color: white;
-      border: none;
-      padding: 6px 12px;
-      border-radius: 5px;
-      margin-top: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 30px;
     }
     select {
-      margin-right: 10px;
-      padding: 5px;
+      padding: 8px;
+      background-color: #1a1a1a;
+      color: #ffd700;
+      border: 1px solid #444;
+      border-radius: 5px;
+      font-size: 1em;
+    }
+    .card {
+      background-color: #1a1a1a;
+      padding: 20px;
+      border-radius: 12px;
+      border: 1px solid #444;
+      margin-bottom: 20px;
+      box-shadow: 0 0 10px #222;
+    }
+    .card h2 {
+      color: #ffcc00;
+      margin-bottom: 10px;
+      font-size: 1.5em;
+    }
+    .card p {
+      margin: 5px 0;
+    }
+    button {
+      margin-top: 10px;
+      padding: 10px 15px;
+      background-color: #800000;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 1em;
+    }
+    button:hover {
+      background-color: #a00000;
+    }
+    @media screen and (max-width: 600px) {
+      h1 {
+        font-size: 1.8em;
+      }
+      .filter {
+        flex-direction: column;
+        align-items: center;
+      }
     }
   </style>
 </head>
 <body>
-  <h1>Codex Librarium: Space Marine Reading Tracker</h1>
+  <h1>Codex Librarium: Warhammer 40K Tracker</h1>
   <div class="filter">
-    <label for="faction">Faction:</label>
     <select id="faction" onchange="renderBooks()">
-      <option value="">All</option>
+      <option value="">Faction</option>
     </select>
-    <label for="era">Era:</label>
     <select id="era" onchange="renderBooks()">
-      <option value="">All</option>
+      <option value="">Era</option>
     </select>
-    <label for="primarch">Primarch:</label>
     <select id="primarch" onchange="renderBooks()">
-      <option value="">All</option>
+      <option value="">Primarch</option>
     </select>
   </div>
   <div id="book-list">Loading books...</div>
@@ -62,7 +100,6 @@
       const book = books[i];
       book.read = book.read === "TRUE" ? "FALSE" : "TRUE";
       renderBooks();
-
       fetch(SCRIPT_URL, {
         method: 'POST',
         headers: {
