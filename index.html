@@ -46,6 +46,10 @@
     <select id="era" onchange="renderBooks()">
       <option value="">All</option>
     </select>
+    <label for="primarch">Primarch:</label>
+    <select id="primarch" onchange="renderBooks()">
+      <option value="">All</option>
+    </select>
   </div>
   <div id="book-list">Loading books...</div>
 
@@ -74,18 +78,22 @@
     function renderBooks() {
       const faction = document.getElementById('faction').value;
       const era = document.getElementById('era').value;
+      const primarch = document.getElementById('primarch').value;
       const container = document.getElementById('book-list');
       container.innerHTML = '';
 
       books.forEach((book, i) => {
-        if ((faction && book.faction !== faction) || (era && book.era !== era)) return;
+        if ((faction && book.faction !== faction) ||
+            (era && book.era !== era) ||
+            (primarch && book.primarch !== primarch)) return;
+
         const card = document.createElement('div');
         card.className = 'card';
         card.innerHTML = `
           <h2>\${book.title}</h2>
           <p><strong>Author:</strong> \${book.author}</p>
           <p><strong>Series:</strong> \${book.series}</p>
-          <p><strong>Era:</strong> \${book.era} | <strong>Faction:</strong> \${book.faction}</p>
+          <p><strong>Era:</strong> \${book.era} | <strong>Faction:</strong> \${book.faction} | <strong>Primarch:</strong> \${book.primarch}</p>
           <button onclick="toggleRead(\${i})">\${book.read === "TRUE" ? "Mark as Unread" : "Mark as Read"}</button>
         `;
         container.appendChild(card);
@@ -105,12 +113,14 @@
             series: cols[2],
             era: cols[3],
             faction: cols[4],
-            read: cols[5] || "FALSE"
+            primarch: cols[5],
+            read: cols[6] || "FALSE"
           };
         });
 
         const factions = [...new Set(books.map(b => b.faction))].sort();
         const eras = [...new Set(books.map(b => b.era))].sort();
+        const primarchs = [...new Set(books.map(b => b.primarch))].sort();
 
         const factionSelect = document.getElementById('faction');
         factions.forEach(f => {
@@ -126,6 +136,14 @@
           option.value = e;
           option.textContent = e;
           eraSelect.appendChild(option);
+        });
+
+        const primarchSelect = document.getElementById('primarch');
+        primarchs.forEach(p => {
+          const option = document.createElement('option');
+          option.value = p;
+          option.textContent = p;
+          primarchSelect.appendChild(option);
         });
 
         renderBooks();
